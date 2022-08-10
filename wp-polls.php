@@ -1,11 +1,9 @@
 <?php
 /*
-Plugin Name: WP-Polls
-Plugin URI: https://lesterchan.net/portfolio/programming/php/
+Plugin Name: WP-Polls-MB
 Description: Adds an AJAX poll system to your WordPress blog. You can easily include a poll into your WordPress's blog post/page. WP-Polls is extremely customizable via templates and css styles and there are tons of options for you to choose to ensure that WP-Polls runs the way you wanted. It now supports multiple selection of answers.
 Version: 2.76.0
-Author: Lester 'GaMerZ' Chan
-Author URI: https://lesterchan.net
+Author: Max Bartels
 Text Domain: wp-polls
 */
 
@@ -460,7 +458,7 @@ function display_pollvote($poll_id, $display_loading = true) {
 
 	// Get Poll Answers Data
 	list($order_by, $sort_order) = _polls_get_ans_sort();
-	$poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_qid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d ORDER BY $order_by $sort_order", $poll_question_id ) );
+	$poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_qid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d NOT IN (SELECT polla_answers FROM $wpdb->pollsip LEFT JOIN $wpdb->pollsa on $wpdb->pollsip.pollip_aid = $wpdb->pollsa.polla_aid) ORDER BY $order_by $sort_order", $poll_question_id ) );
 	// If There Is Poll Question With Answers
 	if($poll_question && $poll_answers) {
 		// Display Poll Voting Form
@@ -598,7 +596,7 @@ function display_pollresult( $poll_id, $user_voted = array(), $display_loading =
 	} else {
 		$template_variables['%POLL_MULTIPLE_ANS_MAX%'] = '1';
 	}
-	
+
 	$template_variables = apply_filters('wp_polls_template_resultheader_variables', $template_variables );
 	$template_question  = apply_filters('wp_polls_template_resultheader_markup', $template_question, $poll_question, $template_variables );
 
