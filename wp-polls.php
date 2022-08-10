@@ -458,7 +458,7 @@ function display_pollvote($poll_id, $display_loading = true) {
 
 	// Get Poll Answers Data
 	list($order_by, $sort_order) = _polls_get_ans_sort();
-	$poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_qid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d NOT IN (SELECT polla_answers FROM $wpdb->pollsip LEFT JOIN $wpdb->pollsa on $wpdb->pollsip.pollip_aid = $wpdb->pollsa.polla_aid) ORDER BY $order_by $sort_order", $poll_question_id ) );
+	$poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_qid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d AND polla_answers NOT IN (SELECT polla_answers FROM $wpdb->pollsip LEFT JOIN $wpdb->pollsa on $wpdb->pollsip.pollip_aid = $wpdb->pollsa.polla_aid) ORDER BY $order_by $sort_order", $poll_question_id ) );
 	// If There Is Poll Question With Answers
 	if($poll_question && $poll_answers) {
 		// Display Poll Voting Form
