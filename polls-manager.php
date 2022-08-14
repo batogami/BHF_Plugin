@@ -204,6 +204,7 @@ switch($mode) {
         $poll_expiry = trim($poll_question->pollq_expiry);
         $poll_multiple = (int) $poll_question->pollq_multiple;
         $poll_totalvoters = (int) $poll_question->pollq_totalvoters;
+		$poll_dependencies = trim($poll_question->pollq_dependencies);
 ?>
         <?php if(!empty($text)) { echo '<!-- Last Action --><div id="message" class="updated fade">'.removeslashes($text).'</div>'; } else { echo '<div id="message" class="updated" style="display: none;"></div>'; } ?>
 
@@ -269,6 +270,20 @@ switch($mode) {
                     </tr>
                 </tbody>
             </table>
+			<!-- Poll Dependencies -->
+			<h3><?php _e('Poll Dependencies', 'wp-polls'); ?></h3>
+			<table class="form-table">
+				<tbody>
+					<tr>
+						<th width="40%" scope="row" valign="top"><?php _e('Which polls must be answered for a valid result?', 'wp-polls'); ?></th>
+						<?php
+							echo '<td width="60%">
+								<input  name="pollq_dependencies" id="pollq_dependencies" size="1" type="text">
+							</td>'
+						?>
+					</tr>
+				</tbody>
+			</table>
             <!-- Poll Multiple Answers -->
             <h3><?php _e('Poll Multiple Answers', 'wp-polls') ?></h3>
             <table class="form-table">

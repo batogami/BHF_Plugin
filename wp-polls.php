@@ -1845,6 +1845,7 @@ function polls_activate() {
 							  "pollq_expiry int(10) NOT NULL default '0'," .
 							  "pollq_multiple tinyint(3) NOT NULL default '0'," .
 							  "pollq_totalvoters int(10) NOT NULL default '0'," .
+			                  "pollq_dependencies varchar(200) character set utf8 NOT NULL default ''," .
 							  "PRIMARY KEY  (pollq_id)" .
 							  ") $charset_collate;";
 	$create_table['pollsa'] = "CREATE TABLE $wpdb->pollsa (" .
