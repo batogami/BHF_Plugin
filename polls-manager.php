@@ -26,6 +26,8 @@ if(!empty($_POST['do'])) {
             $pollq_totalvoters = (int) sanitize_key($_POST['pollq_totalvoters']);
             // Poll Question
             $pollq_question = esc_sql( wp_kses_post( trim( $_POST['pollq_question'] ) ) );
+			//Poll Vote Factor
+			$pollq_vote_factor = (int) sanitize_key($_POST['pollq_vote_factor']);
 			//Poll Dependencies
 			$poll_dependencies = esc_sql( wp_kses_post( trim( $_POST['pollq_dependencies'] ) ) );
             // Poll Active
@@ -86,7 +88,8 @@ if(!empty($_POST['do'])) {
                     'pollq_expiry'          => $pollq_expiry,
                     'pollq_multiple'        => $pollq_multiple,
                     'pollq_totalvoters'     => $pollq_totalvoters,
-					'pollq_dependencies' 	=> $poll_dependencies
+					'pollq_dependencies' 	=> $poll_dependencies,
+					'pollq_vote_factor' 	=> $pollq_vote_factor
                 ),
                 array(
                     'pollq_id' => $pollq_id
@@ -208,6 +211,7 @@ switch($mode) {
         $poll_multiple = (int) $poll_question->pollq_multiple;
         $poll_totalvoters = (int) $poll_question->pollq_totalvoters;
 		$poll_dependencies = trim($poll_question->pollq_dependencies);
+		$poll_vote_factor = (int) $poll_question->pollq_vote_factor;
 ?>
         <?php if(!empty($text)) { echo '<!-- Last Action --><div id="message" class="updated fade">'.removeslashes($text).'</div>'; } else { echo '<div id="message" class="updated" style="display: none;"></div>'; } ?>
 
@@ -271,6 +275,16 @@ switch($mode) {
                         <td width="60%">&nbsp;</td>
                         <td width="20%" align="<?php echo $last_col_align; ?>"><strong><?php _e('Total Voters:', 'wp-polls'); ?> <?php echo number_format_i18n($poll_totalvoters); ?></strong> <input type="text" size="4" name="pollq_totalvoters" value="<?php echo $poll_totalvoters; ?>" /></td>
                     </tr>
+					<tr>
+						<th width="40%" scope="row" valign="top"><?php _e('With which factor should a vote be multiplied with?', 'wp-polls'); ?></th>
+						<td width="60%">
+							<select name="pollq_vote_factor" id="pollq_vote_factor" size="1">
+								<option value="1">1</option>
+								<option value="2">2</option>
+								<option value="3">3</option>
+							</select>
+						</td>
+					</tr>
                 </tbody>
             </table>
 			<!-- Poll Dependencies -->

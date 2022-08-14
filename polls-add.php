@@ -19,6 +19,8 @@ if ( ! empty($_POST['do'] ) ) {
 			// Poll Question
 			$pollq_question = isset( $_POST['pollq_question'] ) ? wp_kses_post( trim( $_POST['pollq_question'] ) ) : '';
 			if ( ! empty( $pollq_question ) ) {
+				//Poll Vote Factor
+				$pollq_vote_factor = isset( $_POST['pollq_dependencies'] ) ? (int) sanitize_key($_POST['pollq_vote_factor']) : 1;
 				//Poll Dependencies
 				$pollq_dependencies = isset( $_POST['pollq_dependencies'] ) ? esc_sql( wp_kses_post( trim( $_POST['pollq_dependencies'] ) ) ) : '';
 				// Poll Start Date
@@ -70,7 +72,8 @@ if ( ! empty($_POST['do'] ) ) {
 						'pollq_expiry'      => $pollq_expiry,
 						'pollq_multiple'    => $pollq_multiple,
 						'pollq_totalvoters' => 0,
-						'pollq_dependencies' 	=> $pollq_dependencies
+						'pollq_dependencies' 	=> $pollq_dependencies,
+						'pollq_vote_factor' 	=> $pollq_vote_factor
 					),
 					array(
 						'%s',
@@ -168,6 +171,16 @@ $count = 0;
 				$count++;
 			}
 		?>
+		<tr>
+			<th width="40%" scope="row" valign="top"><?php _e('With which factor should a vote be multiplied with?', 'wp-polls'); ?></th>
+			<td width="60%">
+				<select name="pollq_vote_factor" id="pollq_vote_factor" size="1">
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+				</select>
+			</td>
+		</tr>
 		</tbody>
 	</table>
 	<!-- Poll Dependencies -->
