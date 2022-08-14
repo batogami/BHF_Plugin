@@ -19,6 +19,8 @@ if ( ! empty($_POST['do'] ) ) {
 			// Poll Question
 			$pollq_question = isset( $_POST['pollq_question'] ) ? wp_kses_post( trim( $_POST['pollq_question'] ) ) : '';
 			if ( ! empty( $pollq_question ) ) {
+				//Poll Dependencies
+				$pollq_dependencies = isset( $_POST['pollq_dependencies'] ) ? esc_sql( wp_kses_post( trim( $_POST['pollq_dependencies'] ) ) ) : '';
 				// Poll Start Date
 				$timestamp_sql = '';
 				$pollq_timestamp_day = isset( $_POST['pollq_timestamp_day'] ) ? (int) sanitize_key( $_POST['pollq_timestamp_day'] ) : 0;
@@ -67,7 +69,8 @@ if ( ! empty($_POST['do'] ) ) {
 						'pollq_active'      => $pollq_active,
 						'pollq_expiry'      => $pollq_expiry,
 						'pollq_multiple'    => $pollq_multiple,
-						'pollq_totalvoters' => 0
+						'pollq_totalvoters' => 0,
+						'pollq_dependencies' 	=> $pollq_dependencies
 					),
 					array(
 						'%s',
@@ -165,6 +168,18 @@ $count = 0;
 				$count++;
 			}
 		?>
+		</tbody>
+	</table>
+	<!-- Poll Dependencies -->
+	<h3><?php _e('Poll Dependencies', 'wp-polls'); ?></h3>
+	<table class="form-table">
+		<tbody>
+		<tr>
+			<th width="40%" scope="row" valign="top"><?php _e('Which polls must be answered for a valid result?', 'wp-polls'); ?></th>
+			<?php
+			echo '<td width="60%">'." <input type=\"text\" size=\"4\" id=\"pollq_dependencies\" name=\"pollq_dependencies\" value=\"\" /></td>\n";
+			?>
+		</tr>
 		</tbody>
 	</table>
 	<!-- Poll Multiple Answers -->

@@ -26,6 +26,8 @@ if(!empty($_POST['do'])) {
             $pollq_totalvoters = (int) sanitize_key($_POST['pollq_totalvoters']);
             // Poll Question
             $pollq_question = esc_sql( wp_kses_post( trim( $_POST['pollq_question'] ) ) );
+			//Poll Dependencies
+			$poll_dependencies = esc_sql( wp_kses_post( trim( $_POST['pollq_dependencies'] ) ) );
             // Poll Active
             $pollq_active = (int) sanitize_key($_POST['pollq_active']);
             // Poll Start Date
@@ -83,7 +85,8 @@ if(!empty($_POST['do'])) {
                     'pollq_active'          => $pollq_active,
                     'pollq_expiry'          => $pollq_expiry,
                     'pollq_multiple'        => $pollq_multiple,
-                    'pollq_totalvoters'     => $pollq_totalvoters
+                    'pollq_totalvoters'     => $pollq_totalvoters,
+					'pollq_dependencies' 	=> $poll_dependencies
                 ),
                 array(
                     'pollq_id' => $pollq_id
@@ -194,7 +197,7 @@ switch($mode) {
     // Edit A Poll
     case 'edit':
         $last_col_align = is_rtl() ? 'right' : 'left';
-        $poll_question = $wpdb->get_row( $wpdb->prepare( "SELECT pollq_question, pollq_timestamp, pollq_totalvotes, pollq_active, pollq_expiry, pollq_multiple, pollq_totalvoters FROM $wpdb->pollsq WHERE pollq_id = %d", $poll_id ) );
+        $poll_question = $wpdb->get_row( $wpdb->prepare( "SELECT pollq_question, pollq_timestamp, pollq_totalvotes, pollq_active, pollq_expiry, pollq_multiple, pollq_totalvoters, pollq_dependencies FROM $wpdb->pollsq WHERE pollq_id = %d", $poll_id ) );
         $poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d ORDER BY polla_aid ASC", $poll_id ) );
         $poll_noquestion = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(polla_aid) FROM $wpdb->pollsa WHERE polla_qid = %d", $poll_id ) );
         $poll_question_text = removeslashes($poll_question->pollq_question);
@@ -277,9 +280,7 @@ switch($mode) {
 					<tr>
 						<th width="40%" scope="row" valign="top"><?php _e('Which polls must be answered for a valid result?', 'wp-polls'); ?></th>
 						<?php
-							echo '<td width="60%">
-								<input  name="pollq_dependencies" id="pollq_dependencies" size="1" type="text">
-							</td>'
+							echo '<td width="60%">'." <input type=\"text\" size=\"4\" id=\"pollq_dependencies\" name=\"pollq_dependencies\" value=\"$poll_dependencies\" /></td>\n";
 						?>
 					</tr>
 				</tbody>
