@@ -1010,7 +1010,7 @@ function polls_archive() {
 	$questions = $wpdb->get_results("SELECT * FROM $wpdb->pollsq WHERE $polls_type_sql ORDER BY pollq_id DESC LIMIT $offset, $polls_perpage");
 	if($questions) {
 		foreach($questions as $question) {
-			$polls_questions[] = array( 'id' => (int) $question->pollq_id, 'question' => wp_kses_post( removeslashes( $question->pollq_question ) ), 'timestamp' => $question->pollq_timestamp, 'totalvotes' => (int) $question->pollq_totalvotes, 'start' => $question->pollq_timestamp, 'end' => trim( $question->pollq_expiry ), 'multiple' => (int) $question->pollq_multiple, 'totalvoters' => (int) $question->pollq_totalvoters );
+			$polls_questions[] = array( 'id' => (int) $question->pollq_id, 'question' => wp_kses_post( removeslashes( $question->pollq_question ) ), 'timestamp' => $question->pollq_timestamp, 'totalvotes' => (int) $question->pollq_totalvotes, 'start' => $question->pollq_timestamp, 'end' => trim( $question->pollq_expiry ), 'multiple' => (int) $question->pollq_multiple, 'totalvoters' => (int) $question->pollq_totalvoters, 'vote_factor' => (int) $question->pollq_vote_factor);
 			$poll_questions_ids .= (int) $question->pollq_id . ', ';
 		}
 		$poll_questions_ids = substr($poll_questions_ids, 0, -2);
@@ -1073,10 +1073,10 @@ function polls_archive() {
 		$poll_answer_percentage_array = array();
 		foreach($polls_answers[$polls_question['id']] as $polls_answer) {
 			// Calculate Percentage And Image Bar Width
-			$poll_answer_percentage = 0;
+			$poll_answer_percentage = $polls_answer['votes'] * $polls_question['vote_factor'];//0;
 			$poll_multiple_answer_percentage = 0;
 			$poll_answer_imagewidth = 1;
-			if ( ! $poll_totalvotes_zero && ! $poll_totalvoters_zero && $polls_answer['votes'] > 0 ) {
+			/*if ( ! $poll_totalvotes_zero && ! $poll_totalvoters_zero && $polls_answer['votes'] > 0 ) {
 				$poll_answer_percentage = round( ( $polls_answer['votes'] / $polls_question['totalvotes'] ) * 100 );
 				$poll_multiple_answer_percentage = round( ( $polls_answer['votes'] / $polls_question['totalvoters'] ) * 100 );
 				$poll_answer_imagewidth = round( $poll_answer_percentage * 0.9 );
@@ -1091,7 +1091,7 @@ function polls_archive() {
 						$poll_answer_percentage = 0;
 					}
 				}
-			}
+			}*/
 			$polls_answer['answers'] = wp_kses_post( $polls_answer['answers'] );
 			// Let User See What Options They Voted
 			if (isset( $polls_ips[$polls_question['id']] ) && in_array( $polls_answer['aid'], check_voted_multiple( $polls_question['id'], $polls_ips[$polls_question['id']] ), true ) ) {

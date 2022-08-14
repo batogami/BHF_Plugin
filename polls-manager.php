@@ -200,7 +200,7 @@ switch($mode) {
     // Edit A Poll
     case 'edit':
         $last_col_align = is_rtl() ? 'right' : 'left';
-        $poll_question = $wpdb->get_row( $wpdb->prepare( "SELECT pollq_question, pollq_timestamp, pollq_totalvotes, pollq_active, pollq_expiry, pollq_multiple, pollq_totalvoters, pollq_dependencies FROM $wpdb->pollsq WHERE pollq_id = %d", $poll_id ) );
+        $poll_question = $wpdb->get_row( $wpdb->prepare( "SELECT pollq_question, pollq_timestamp, pollq_totalvotes, pollq_active, pollq_expiry, pollq_multiple, pollq_totalvoters, pollq_dependencies, pollq_vote_factor FROM $wpdb->pollsq WHERE pollq_id = %d", $poll_id ) );
         $poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d ORDER BY polla_aid ASC", $poll_id ) );
         $poll_noquestion = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(polla_aid) FROM $wpdb->pollsa WHERE polla_qid = %d", $poll_id ) );
         $poll_question_text = removeslashes($poll_question->pollq_question);
@@ -279,9 +279,15 @@ switch($mode) {
 						<th width="40%" scope="row" valign="top"><?php _e('With which factor should a vote be multiplied with?', 'wp-polls'); ?></th>
 						<td width="60%">
 							<select name="pollq_vote_factor" id="pollq_vote_factor" size="1">
-								<option value="1">1</option>
-								<option value="2">2</option>
-								<option value="3">3</option>
+								<?php
+								for($i = 1; $i <= 3; $i++) {
+									if($i == $poll_vote_factor) {
+										echo "<option value=\"$i\" selected=\"selected\">".number_format_i18n($i)."</option>\n";
+									} else {
+										echo "<option value=\"$i\">".number_format_i18n($i)."</option>\n";
+									}
+								}
+								?>
 							</select>
 						</td>
 					</tr>

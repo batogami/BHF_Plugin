@@ -171,16 +171,6 @@ $count = 0;
 				$count++;
 			}
 		?>
-		<tr>
-			<th width="40%" scope="row" valign="top"><?php _e('With which factor should a vote be multiplied with?', 'wp-polls'); ?></th>
-			<td width="60%">
-				<select name="pollq_vote_factor" id="pollq_vote_factor" size="1">
-					<option value="1">1</option>
-					<option value="2">2</option>
-					<option value="3">3</option>
-				</select>
-			</td>
-		</tr>
 		</tbody>
 	</table>
 	<!-- Poll Dependencies -->
@@ -192,6 +182,16 @@ $count = 0;
 			<?php
 			echo '<td width="60%">'." <input type=\"text\" size=\"4\" id=\"pollq_dependencies\" name=\"pollq_dependencies\" value=\"\" /></td>\n";
 			?>
+		</tr>
+		<tr>
+			<th width="40%" scope="row" valign="top"><?php _e('With which factor should a vote be multiplied with?', 'wp-polls'); ?></th>
+			<td width="60%">
+				<select name="pollq_vote_factor" id="pollq_vote_factor" size="1">
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+				</select>
+			</td>
 		</tr>
 		</tbody>
 	</table>
