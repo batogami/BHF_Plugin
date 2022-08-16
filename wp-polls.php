@@ -53,7 +53,7 @@ function poll_menu() {
 	add_submenu_page( 'wp-polls/polls-manager.php', __( 'Add Poll', 'wp-polls'), __( 'Add Poll', 'wp-polls' ), 'manage_polls', 'wp-polls/polls-add.php' );
 	add_submenu_page( 'wp-polls/polls-manager.php', __( 'Poll Options', 'wp-polls'), __( 'Poll Options', 'wp-polls' ), 'manage_polls', 'wp-polls/polls-options.php' );
 	add_submenu_page( 'wp-polls/polls-manager.php', __( 'Poll Templates', 'wp-polls'), __( 'Poll Templates', 'wp-polls' ), 'manage_polls', 'wp-polls/polls-templates.php' );
-	add_submenu_page( 'wp-polls/polls-results.php', __( 'Poll Templates', 'wp-polls'), __( 'Poll Templates', 'wp-polls' ), 'manage_polls', 'wp-polls/polls-results.php' );
+	add_submenu_page( 'wp-polls/polls-manager.php', __( 'Poll Results', 'wp-polls'), __( 'Poll Results', 'wp-polls' ), 'manage_polls', 'wp-polls/poll-results.php' );
 }
 
 
@@ -773,7 +773,8 @@ function poll_get_hostname() {
 ### Function: Short Code For Inserting Polls Archive Into Page
 add_shortcode('page_polls', 'poll_page_shortcode');
 function poll_page_shortcode($atts) {
-	return polls_archive();
+	$attributes = shortcode_atts( array( 'type' => (int) get_option('poll_archive_displaypoll'),), $atts );
+	return polls_archive($attributes['type']);
 }
 
 
@@ -935,9 +936,79 @@ function display_polls_archive_link($display = true) {
 	}
 }
 
+function clean_votes(){
+	global $wpdb;
+	// Get Poll Questions
+	$text = '';
+	$questions = $wpdb->get_results("SELECT * FROM $wpdb->pollsq WHERE pollq_active = 0 ORDER BY pollq_id");
+	if($questions) {
+		foreach($questions as $question) {
+			$current_question_id = (int) $question->pollq_id;
+			//$text = array_map('intval', explode(", ",removeslashes( $question->pollq_dependencies )));
+			$current_question_dependencies = array_map('intval', explode(", ",removeslashes( $question->pollq_dependencies )));
+			$current_question_dependencies[] = $current_question_id;
+			$condition = implode(', ', $current_question_dependencies);
+			$users = $wpdb->get_results("SELECT * FROM $wpdb->pollsip WHERE pollip_qid IN ($condition) AND NOT ( pollip_qid = $current_question_dependencies[0] AND pollip_qid = $current_question_dependencies[1] AND pollip_qid = $current_question_dependencies[2])");
+			if($users) {
+				foreach($users as $user) {
+					$del_question = $user->pollip_qid;
+					$del_question_data = $wpdb->get_results("SELECT * FROM $wpdb->pollsq WHERE pollq_id = $del_question")[0];
+					$del_answer = $user->pollip_aid;
+					$del_answer_data = $wpdb->get_results("SELECT * FROM $wpdb->pollsa WHERE polla_aid = $del_answer")[0];
+					$del_id = $user->pollip_id;
+
+					$edit_poll_question_1 = $wpdb->update(
+							$wpdb->pollsq,
+							array(
+									'pollq_totalvotes'      => $del_question_data->pollq_totalvotes -1,
+									'pollq_totalvoters'     => $del_question_data->pollq_totalvoters -1,
+							),
+							array(
+									'pollq_id' => $del_question
+							),
+							array(
+									'%d',
+									'%d'
+							),
+							array(
+									'%d'
+							)
+					);
+					$edit_poll_question_2 = $wpdb->update(
+							$wpdb->pollsa,
+							array(
+									'polla_votes'      => $del_answer_data->polla_votes -1,
+							),
+							array(
+									'polla_aid' => $del_answer
+							),
+							array(
+									'%d',
+							),
+							array(
+									'%d'
+							)
+					);
+					$edit_poll_question_3 = $wpdb->delete(
+							$wpdb->pollsip,
+							array(
+									'pollip_id'      => $del_id,
+							)
+					);
+					if( ! $edit_poll_question_1 or ! $edit_poll_question_2 or ! $edit_poll_question_3) {
+						$text = '<p style="color: red">'.sprintf(__('Some error occurred.', 'wp-polls').'</p>');
+					}
+				}
+			}
+		}
+	}
+	return $text;
+}
+
+
 
 ### Function: Display Polls Archive
-function polls_archive() {
+function polls_archive($display_type) {
 	do_action('wp_polls_polls_archive');
 	global $wpdb, $in_pollsarchive;
 	// Polls Variables
@@ -952,7 +1023,7 @@ function polls_archive() {
 	$poll_voted_aid = 0;
 	$poll_id = 0;
 	$pollsarchive_output_archive = '';
-	$polls_type = (int) get_option('poll_archive_displaypoll');
+	$polls_type = $display_type; //(int) get_option('poll_archive_displaypoll');
 	$polls_type_sql = '';
 	// Determine What Type Of Polls To Show
 	switch($polls_type) {
