@@ -15,7 +15,7 @@ $base_page = 'admin.php?page='.$base_name;
 	<table class="form-table">
 		<tbody>
 		<tr>
-			<th width="20%" scope="row" valign="top"> <?php echo clean_votes();?></th>
+			<th width="20%" scope="row" valign="top"> <?php clean_votes();?></th>
 			<td width="80%"><?php echo polls_archive(1);?></td>
 		</tr>
 	</table>
