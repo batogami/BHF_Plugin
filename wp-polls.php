@@ -149,14 +149,14 @@ function get_poll($temp_poll_id = 0, $display = true) {
 				{
 					return get_poll($poll_next, false);
 				}
-				return "Vielen Dank für deine Stimme!";
+				return "<p>Vielen Dank für deine Stimme!</p>";
 				//echo "Test1"; //display_pollresult($poll_id, $check_voted);
 			} else {
 				if ($poll_next != 0)
 				{
 					return get_poll($poll_next, false);
 				}
-				return "Vielen Dank für deine Stimme!"; // display_pollresult($poll_id, $check_voted);
+				return "<p>Vielen Dank für deine Stimme!</p>"; // display_pollresult($poll_id, $check_voted);
 			}
 		} elseif( $poll_close === 3 || ! check_allowtovote() ) {
 			$disable_poll_js = '<script type="text/javascript">jQuery("#polls_form_'.$poll_id.' :input").each(function (i){jQuery(this).attr("disabled","disabled")});</script>';
@@ -1530,8 +1530,13 @@ function vote_poll_process($poll_id, $poll_aid_array = [])
 		}
 	}
 	do_action( 'wp_polls_vote_poll_success' );
-
-	return display_pollresult($poll_id, $poll_aid_array, false);
+	$poll_next = $wpdb->get_var( $wpdb->prepare( "SELECT pollq_next FROM $wpdb->pollsq WHERE pollq_id = %d", $poll_id ) );
+	if ($poll_next != 0)
+	{
+		return get_poll($poll_next, false);
+	}
+	return "<p>Vielen Dank für deine Stimme!</p>";
+	//return display_pollresult($poll_id, $poll_aid_array, false);
 }
 
 

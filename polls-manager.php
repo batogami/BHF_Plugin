@@ -30,6 +30,8 @@ if(!empty($_POST['do'])) {
 			$pollq_vote_factor = (int) sanitize_key($_POST['pollq_vote_factor']);
 			//Poll Dependencies
 			$poll_dependencies = esc_sql( wp_kses_post( trim( $_POST['pollq_dependencies'] ) ) );
+			//Poll next
+			$pollq_next = esc_sql( wp_kses_post( trim( $_POST['pollq_next'] ) ) );
             // Poll Active
             $pollq_active = (int) sanitize_key($_POST['pollq_active']);
             // Poll Start Date
@@ -89,6 +91,7 @@ if(!empty($_POST['do'])) {
                     'pollq_multiple'        => $pollq_multiple,
                     'pollq_totalvoters'     => $pollq_totalvoters,
 					'pollq_dependencies' 	=> $poll_dependencies,
+					'pollq_next' 			=> $pollq_next,
 					'pollq_vote_factor' 	=> $pollq_vote_factor
                 ),
                 array(
@@ -200,7 +203,7 @@ switch($mode) {
     // Edit A Poll
     case 'edit':
         $last_col_align = is_rtl() ? 'right' : 'left';
-        $poll_question = $wpdb->get_row( $wpdb->prepare( "SELECT pollq_question, pollq_timestamp, pollq_totalvotes, pollq_active, pollq_expiry, pollq_multiple, pollq_totalvoters, pollq_dependencies, pollq_vote_factor FROM $wpdb->pollsq WHERE pollq_id = %d", $poll_id ) );
+        $poll_question = $wpdb->get_row( $wpdb->prepare( "SELECT pollq_question, pollq_timestamp, pollq_totalvotes, pollq_active, pollq_expiry, pollq_multiple, pollq_totalvoters, pollq_dependencies, pollq_vote_factor, pollq_next FROM $wpdb->pollsq WHERE pollq_id = %d", $poll_id ) );
         $poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d ORDER BY polla_aid ASC", $poll_id ) );
         $poll_noquestion = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(polla_aid) FROM $wpdb->pollsa WHERE polla_qid = %d", $poll_id ) );
         $poll_question_text = removeslashes($poll_question->pollq_question);
@@ -211,6 +214,7 @@ switch($mode) {
         $poll_multiple = (int) $poll_question->pollq_multiple;
         $poll_totalvoters = (int) $poll_question->pollq_totalvoters;
 		$poll_dependencies = trim($poll_question->pollq_dependencies);
+		$poll_next = trim($poll_question->pollq_next);
 		$poll_vote_factor = (int) $poll_question->pollq_vote_factor;
 ?>
         <?php if(!empty($text)) { echo '<!-- Last Action --><div id="message" class="updated fade">'.removeslashes($text).'</div>'; } else { echo '<div id="message" class="updated" style="display: none;"></div>'; } ?>
@@ -301,6 +305,12 @@ switch($mode) {
 						<th width="40%" scope="row" valign="top"><?php _e('Which polls must be answered for a valid result?', 'wp-polls'); ?></th>
 						<?php
 							echo '<td width="60%">'." <input type=\"text\" size=\"4\" id=\"pollq_dependencies\" name=\"pollq_dependencies\" value=\"$poll_dependencies\" /></td>\n";
+						?>
+					</tr>
+					<tr>
+						<th width="40%" scope="row" valign="top"><?php _e('Which poll should be displayed next?', 'wp-polls'); ?></th>
+						<?php
+						echo '<td width="60%">'." <input type=\"text\" size=\"4\" id=\"pollq_next\" name=\"pollq_next\" value=\"$poll_next\" /></td>\n";
 						?>
 					</tr>
 				</tbody>

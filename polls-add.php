@@ -23,6 +23,8 @@ if ( ! empty($_POST['do'] ) ) {
 				$pollq_vote_factor = isset( $_POST['pollq_dependencies'] ) ? (int) sanitize_key($_POST['pollq_vote_factor']) : 1;
 				//Poll Dependencies
 				$pollq_dependencies = isset( $_POST['pollq_dependencies'] ) ? esc_sql( wp_kses_post( trim( $_POST['pollq_dependencies'] ) ) ) : '';
+				//Poll next
+				$pollq_next = isset( $_POST['pollq_next'] ) ? esc_sql( wp_kses_post( trim( $_POST['pollq_next'] ) ) ) : 0;
 				// Poll Start Date
 				$timestamp_sql = '';
 				$pollq_timestamp_day = isset( $_POST['pollq_timestamp_day'] ) ? (int) sanitize_key( $_POST['pollq_timestamp_day'] ) : 0;
@@ -73,6 +75,7 @@ if ( ! empty($_POST['do'] ) ) {
 						'pollq_multiple'    => $pollq_multiple,
 						'pollq_totalvoters' => 0,
 						'pollq_dependencies' 	=> $pollq_dependencies,
+						'pollq_next' 	=> $pollq_next,
 						'pollq_vote_factor' 	=> $pollq_vote_factor
 					),
 					array(
@@ -181,6 +184,12 @@ $count = 0;
 			<th width="40%" scope="row" valign="top"><?php _e('Which polls must be answered for a valid result?', 'wp-polls'); ?></th>
 			<?php
 			echo '<td width="60%">'." <input type=\"text\" size=\"4\" id=\"pollq_dependencies\" name=\"pollq_dependencies\" value=\"\" /></td>\n";
+			?>
+		</tr>
+		<tr>
+			<th width="40%" scope="row" valign="top"><?php _e('Which poll should be displayed next?', 'wp-polls'); ?></th>
+			<?php
+			echo '<td width="60%">'." <input type=\"text\" size=\"4\" id=\"pollq_next\" name=\"pollq_next\" value=\"\" /></td>\n";
 			?>
 		</tr>
 		<tr>
