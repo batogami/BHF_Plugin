@@ -141,11 +141,22 @@ function get_poll($temp_poll_id = 0, $display = true) {
 				return '';
 			}
 		}
+		$poll_next = $wpdb->get_var( $wpdb->prepare( "SELECT pollq_next FROM $wpdb->pollsq WHERE pollq_id = %d", $poll_id ) );
+		//pollq_next
 		if( $poll_close === 1 || (int) $check_voted > 0 || ( is_array( $check_voted ) && count( $check_voted ) > 0 ) ) {
 			if($display) {
-				echo display_pollresult($poll_id, $check_voted);
+				if ($poll_next != 0)
+				{
+					return get_poll($poll_next, false);
+				}
+				return "Vielen Dank für deine Stimme!";
+				//echo "Test1"; //display_pollresult($poll_id, $check_voted);
 			} else {
-				return display_pollresult($poll_id, $check_voted);
+				if ($poll_next != 0)
+				{
+					return get_poll($poll_next, false);
+				}
+				return "Vielen Dank für deine Stimme!"; // display_pollresult($poll_id, $check_voted);
 			}
 		} elseif( $poll_close === 3 || ! check_allowtovote() ) {
 			$disable_poll_js = '<script type="text/javascript">jQuery("#polls_form_'.$poll_id.' :input").each(function (i){jQuery(this).attr("disabled","disabled")});</script>';
@@ -459,7 +470,8 @@ function display_pollvote($poll_id, $display_loading = true) {
 
 	// Get Poll Answers Data
 	list($order_by, $sort_order) = _polls_get_ans_sort();
-	$poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_qid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d AND polla_answers NOT IN (SELECT polla_answers FROM $wpdb->pollsip LEFT JOIN $wpdb->pollsa on $wpdb->pollsip.pollip_aid = $wpdb->pollsa.polla_aid) ORDER BY $order_by $sort_order", $poll_question_id ) );
+	$poll_temp_ip = poll_get_ipaddress();
+	$poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_qid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d AND polla_answers NOT IN (SELECT $wpdb->pollsa.polla_answers FROM $wpdb->pollsip LEFT JOIN $wpdb->pollsa on $wpdb->pollsip.pollip_aid = $wpdb->pollsa.polla_aid WHERE pollip_ip = %s) ORDER BY $order_by $sort_order", array( $poll_question_id, $poll_temp_ip) ) );
 	// If There Is Poll Question With Answers
 	if($poll_question && $poll_answers) {
 		// Display Poll Voting Form
@@ -510,7 +522,7 @@ function display_pollvote($poll_id, $display_loading = true) {
 		// Voting Form Footer Variables
 		$template_footer = removeslashes(get_option('poll_template_votefooter'));
 
-		$template_footer_variables = array(
+		$template_footer_variables = array( //TODO: hier link setzen
 			'%POLL_ID%'               => $poll_question_id,
 			'%POLL_RESULT_URL%'       => $poll_result_url,
 			'%POLL_START_DATE%'       => $poll_start_date,
@@ -1562,7 +1574,7 @@ function vote_poll() {
 				break;
 			// Poll Result
 			case 'result':
-				echo display_pollresult($poll_id, 0, false);
+				echo "Vielen Dank für deine Stimme!";
 				break;
 			// Poll Booth Aka Poll Voting Form
 			case 'booth':
@@ -1918,6 +1930,7 @@ function polls_activate() {
 							  "pollq_multiple tinyint(3) NOT NULL default '0'," .
 							  "pollq_totalvoters int(10) NOT NULL default '0'," .
 			                  "pollq_dependencies varchar(200) character set utf8 NOT NULL default ''," .
+			                  "pollq_next int(10) NOT NULL default '0'," .
 			                  "pollq_vote_factor int(10) NOT NULL default '1'," .
 							  "PRIMARY KEY  (pollq_id)" .
 							  ") $charset_collate;";
