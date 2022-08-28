@@ -58,7 +58,7 @@ function poll_menu() {
 
 
 ### Function: Get Poll
-function get_poll($temp_poll_id = 0, $display = true) {
+function get_poll($temp_poll_id = 0, $display = true, $prev_poll_id = 0) {
 	global $wpdb, $polls_loaded;
 	// Poll Result Link
 	if(isset($_GET['pollresult'])) {
@@ -147,29 +147,29 @@ function get_poll($temp_poll_id = 0, $display = true) {
 			if($display) {
 				if ($poll_next != 0)
 				{
-					return get_poll($poll_next, false);
+					return get_poll($poll_next, false, $poll_id); // TODO:
 				}
 				return "<p>Vielen Dank für deine Stimme!</p>";
 				//echo "Test1"; //display_pollresult($poll_id, $check_voted);
 			} else {
 				if ($poll_next != 0)
 				{
-					return get_poll($poll_next, false);
+					return get_poll($poll_next, false, $poll_id);
 				}
 				return "<p>Vielen Dank für deine Stimme!</p>"; // display_pollresult($poll_id, $check_voted);
 			}
 		} elseif( $poll_close === 3 || ! check_allowtovote() ) {
 			$disable_poll_js = '<script type="text/javascript">jQuery("#polls_form_'.$poll_id.' :input").each(function (i){jQuery(this).attr("disabled","disabled")});</script>';
 			if($display) {
-				echo display_pollvote($poll_id).$disable_poll_js;
+				echo display_pollvote($poll_id, true,$prev_poll_id).$disable_poll_js;
 			} else {
-				return display_pollvote($poll_id).$disable_poll_js;
+				return display_pollvote($poll_id, true, $prev_poll_id).$disable_poll_js;
 			}
 		} elseif( $poll_active === 1 ) {
 			if($display) {
-				echo display_pollvote($poll_id);
+				echo display_pollvote($poll_id, true, $prev_poll_id);
 			} else {
-				return display_pollvote($poll_id);
+				return display_pollvote($poll_id, true, $prev_poll_id);
 			}
 		}
 	}
@@ -431,13 +431,14 @@ function poll_template_vote_markup( $template, $object, $variables ) {
 
 
 ### Function: Display Voting Form
-function display_pollvote($poll_id, $display_loading = true) {
+function display_pollvote($poll_id, $display_loading = true, $prev_poll_id = 0) { //TODO: Diese funktion anpassen
+
 	do_action('wp_polls_display_pollvote');
 	global $wpdb;
 	// Temp Poll Result
 	$temp_pollvote = '';
 	// Get Poll Question Data
-	$poll_question = $wpdb->get_row( $wpdb->prepare( "SELECT pollq_id, pollq_question, pollq_totalvotes, pollq_timestamp, pollq_expiry, pollq_multiple, pollq_totalvoters FROM $wpdb->pollsq WHERE pollq_id = %d LIMIT 1", $poll_id ) );
+	$poll_question = $wpdb->get_row( $wpdb->prepare( "SELECT pollq_id, pollq_question, pollq_totalvotes, pollq_timestamp, pollq_expiry, pollq_multiple, pollq_totalvoters, pollq_dependencies FROM $wpdb->pollsq WHERE pollq_id = %d LIMIT 1", $poll_id ) );
 
 	// Poll Question Variables
 	$poll_question_text = wp_kses_post( removeslashes( $poll_question->pollq_question ) );
@@ -462,7 +463,8 @@ function display_pollvote($poll_id, $display_loading = true) {
 		'%POLL_TOTALVOTERS%'        => $poll_question_totalvoters,
 		'%POLL_START_DATE%'         => $poll_start_date,
 		'%POLL_END_DATE%'           => $poll_end_date,
-		'%POLL_MULTIPLE_ANS_MAX%'   => $poll_multiple_ans > 0 ? $poll_multiple_ans : 1
+		'%POLL_MULTIPLE_ANS_MAX%'   => $poll_multiple_ans > 0 ? $poll_multiple_ans : 1,
+		'%PREV_VOTE_ID%'			=> $prev_poll_id
 	);
 	$template_question_variables = apply_filters( 'wp_polls_template_voteheader_variables', $template_question_variables );
 	$template_question  		 = apply_filters( 'wp_polls_template_voteheader_markup', $template_question, $poll_question, $template_question_variables );
@@ -470,8 +472,31 @@ function display_pollvote($poll_id, $display_loading = true) {
 
 	// Get Poll Answers Data
 	list($order_by, $sort_order) = _polls_get_ans_sort();
+
 	$poll_temp_ip = poll_get_ipaddress();
-	$poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_qid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d AND polla_answers NOT IN (SELECT $wpdb->pollsa.polla_answers FROM $wpdb->pollsip LEFT JOIN $wpdb->pollsa on $wpdb->pollsip.pollip_aid = $wpdb->pollsa.polla_aid WHERE pollip_ip = %s) ORDER BY $order_by $sort_order", array( $poll_question_id, $poll_temp_ip) ) );
+	#get dependencies id
+	# get aid by cookie and dependency id
+	$dependencies_str = $poll_question->pollq_dependencies;
+	$dependencies = array_map('intval', explode(", ",removeslashes( $dependencies_str )));
+	$dependencies[] = $poll_id;
+	$prev_answers = [0];
+	foreach ($dependencies as $dependency_id)
+	{
+		if ( is_array(check_voted_cookie($dependency_id))) {
+			$prev_answers = array_merge($prev_answers, check_voted_cookie($dependency_id));
+		}
+	}
+	if (is_array($prev_poll_id))
+	{
+		$prev_answers = array_merge($prev_answers, $prev_poll_id);
+	}
+	elseif ($prev_poll_id != 0)
+	{
+		$prev_answers[] = $prev_poll_id;
+	}
+	$condition = implode(', ', $prev_answers);
+
+	$poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_qid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d AND polla_answers NOT IN (SELECT polla_answers FROM $wpdb->pollsa WHERE polla_aid IN (" . implode(',', $prev_answers) . ")) ORDER BY $order_by $sort_order", array( $poll_question_id) ) );
 	// If There Is Poll Question With Answers
 	if($poll_question && $poll_answers) {
 		// Display Poll Voting Form
@@ -522,7 +547,7 @@ function display_pollvote($poll_id, $display_loading = true) {
 		// Voting Form Footer Variables
 		$template_footer = removeslashes(get_option('poll_template_votefooter'));
 
-		$template_footer_variables = array( //TODO: hier link setzen
+		$template_footer_variables = array(
 			'%POLL_ID%'               => $poll_question_id,
 			'%POLL_RESULT_URL%'       => $poll_result_url,
 			'%POLL_START_DATE%'       => $poll_start_date,
@@ -550,6 +575,27 @@ function display_pollvote($poll_id, $display_loading = true) {
 	return $temp_pollvote;
 }
 
+function test()
+{
+	global $wpdb;
+	$poll_question = $wpdb->get_row( $wpdb->prepare( "SELECT pollq_id, pollq_question, pollq_totalvotes, pollq_timestamp, pollq_expiry, pollq_multiple, pollq_totalvoters, pollq_dependencies FROM $wpdb->pollsq WHERE pollq_id = %d LIMIT 1", 2 ) );
+
+	$dependencies_str = $poll_question->pollq_dependencies;
+	$dependencies = array_map('intval', explode(", ",removeslashes( $dependencies_str )));
+	$dependencies[] = 2;
+	$prev_answers = [0];
+	foreach ($dependencies as $dependency_id)
+	{
+		if ( check_voted_cookie($dependency_id) != 0) {
+			$prev_answers = array_merge($prev_answers, check_voted_cookie($dependency_id));
+		}
+	}
+	$condition = implode(', ', $prev_answers);
+	$a = $wpdb->prepare( "SELECT polla_aid, polla_qid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d AND polla_answers NOT IN (SELECT polla_answers FROM $wpdb->pollsa WHERE polla_aid IN (" . implode(',', $prev_answers) . "))", array( 2) );
+
+
+	return $condition;
+}
 
 ### Function: Display Results Form
 function display_pollresult( $poll_id, $user_voted = array(), $display_loading = true ) {
@@ -1541,7 +1587,7 @@ function vote_poll_process($poll_id, $poll_aid_array = [])
 	$poll_next = $wpdb->get_var( $wpdb->prepare( "SELECT pollq_next FROM $wpdb->pollsq WHERE pollq_id = %d", $poll_id ) );
 	if ($poll_next != 0)
 	{
-		return get_poll($poll_next, false);
+		return get_poll($poll_next, false, $polla_aid);
 	}
 	return "<p>Vielen Dank für deine Stimme!</p>";
 	//return display_pollresult($poll_id, $poll_aid_array, false);

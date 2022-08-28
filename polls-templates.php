@@ -94,7 +94,7 @@ if( isset($_POST['Submit']) && $_POST['Submit'] ) {
 		var default_template;
 		switch(template) {
 			case "voteheader":
-				default_template = "<p style=\"text-align: center;\"><strong>%POLL_QUESTION%</strong></p>\n<div id=\"polls-%POLL_ID%-ans\" class=\"wp-polls-ans\">\n<ul class=\"wp-polls-ul\">";
+				default_template = "<p style=\"text-align: center;\"><strong>%POLL_QUESTION%</strong></p><p>%PREV_VOTE_ID%</p>\n<div id=\"polls-%POLL_ID%-ans\" class=\"wp-polls-ans\">\n<ul class=\"wp-polls-ul\">";
 				break;
 			case "votebody":
 				default_template = "<li><input type=\"%POLL_CHECKBOX_RADIO%\" id=\"poll-answer-%POLL_ANSWER_ID%\" name=\"poll_%POLL_ID%\" value=\"%POLL_ANSWER_ID%\" /> <label for=\"poll-answer-%POLL_ANSWER_ID%\">%POLL_ANSWER%</label></li>";
@@ -261,6 +261,14 @@ if( isset($_POST['Submit']) && $_POST['Submit'] ) {
 				<?php _e('Display the poll archive URL', 'wp-polls'); ?>
 			</td>
 		</tr>
+		<tr class="alternate">
+			<td>
+				<strong>%PREV_VOTE_ID%</strong><br />
+				<?php _e('To deselect answers', 'wp-polls'); ?>
+			</td>
+			<td>
+			</td>
+		</tr>
 		<tr>
 			<td>
 				<strong>%POLL_MULTIPLE_ANSWER_PERCENTAGE%</strong><br />
@@ -290,6 +298,7 @@ if( isset($_POST['Submit']) && $_POST['Submit'] ) {
 				<p style="margin: 2px 0">- %POLL_END_DATE%</p>
 				<p style="margin: 2px 0">- %POLL_TOTALVOTES%</p>
 				<p style="margin: 2px 0">- %POLL_TOTALVOTERS%</p>
+				<p style="margin: 2px 0">- %PREV_VOTE_ID%</p>
 				<p style="margin: 2px 0">- %POLL_MULTIPLE_ANS_MAX%</p><br />
 				<input type="button" name="RestoreDefault" value="<?php _e('Restore Default Template', 'wp-polls'); ?>" onclick="poll_default_templates('voteheader');" class="button" />
 			</td>
