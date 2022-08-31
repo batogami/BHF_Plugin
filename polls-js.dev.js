@@ -40,6 +40,43 @@ function poll_vote(current_poll_id) {
 	});
 }
 
+function test_hide(current_poll_id) {
+	jQuery(document).ready(function($) {
+		poll_answer_id = '';
+		poll_multiple_ans = 0;
+		poll_multiple_ans_count = 0;
+		if($('#poll_multiple_ans_' + current_poll_id).length) {
+			poll_multiple_ans = parseInt($('#poll_multiple_ans_' + current_poll_id).val());
+		}
+		$('#polls_form_' + current_poll_id + ' input:checkbox, #polls_form_' + current_poll_id + ' input:radio, #polls_form_' + current_poll_id + ' option').each(function(i){
+			if ($(this).is(':checked') || $(this).is(':selected')) {
+				if(poll_multiple_ans > 0) {
+					poll_answer_id = $(this).val() + ',' + poll_answer_id;
+					poll_multiple_ans_count++;
+				} else {
+					poll_answer_id = parseInt($(this).val());
+				}
+			}
+		});
+		if(poll_multiple_ans > 0) {
+			if(poll_multiple_ans_count > 0 && poll_multiple_ans_count <= poll_multiple_ans) {
+				poll_answer_id = poll_answer_id.substring(0, (poll_answer_id.length-1));
+				poll_process(current_poll_id, poll_answer_id);
+			} else if(poll_multiple_ans_count == 0) {
+				alert(pollsL10n.text_valid);
+			} else {
+				alert(pollsL10n.text_multiple + ' ' + poll_multiple_ans);
+			}
+		} else {
+			if(poll_answer_id > 0) {
+				poll_process(current_poll_id, poll_answer_id);
+			} else {
+				alert(pollsL10n.text_valid);
+			}
+		}
+	});
+}
+
 // Process Poll (User Click "Vote" Button)
 function poll_process(current_poll_id, poll_answer_id) {
 	jQuery(document).ready(function($) {

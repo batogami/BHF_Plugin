@@ -19,6 +19,15 @@ $base_page = 'admin.php?page='.$base_name;
 			<td width="80%"><?php echo polls_archive(1);?></td>
 		</tr>
 	</table>
+	<div class="test"">
+	<table class="form-table">
+		<tbody>
+		<tr>
+			<th width="20%" scope="row" valign="top"></th>
+			<td width="80%"><?php echo  display_pollvote_test(2); echo  display_pollvote_test(3); ?></td>
+		</tr>
+	</table>
+	</div>
 	<style>
 		.container {
 			height: 200px;
