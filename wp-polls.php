@@ -27,7 +27,7 @@ Text Domain: wp-polls
 */
 
 ### Version
-define( 'WP_POLLS_VERSION', '2.76.0' );
+define( 'WP_POLLS_VERSION', '2.76.1' );
 
 
 ### Create Text Domain For Translations
@@ -55,6 +55,7 @@ function poll_menu() {
 	add_submenu_page( 'wp-polls/polls-manager.php', __( 'Poll Templates', 'wp-polls'), __( 'Poll Templates', 'wp-polls' ), 'manage_polls', 'wp-polls/polls-templates.php' );
 	add_submenu_page( 'wp-polls/polls-manager.php', __( 'Poll Results', 'wp-polls'), __( 'Poll Results', 'wp-polls' ), 'manage_polls', 'wp-polls/poll-results.php' );
 }
+
 
 
 ### Function: Get Poll
@@ -145,17 +146,17 @@ function get_poll($temp_poll_id = 0, $display = true, $prev_poll_id = 0) {
 		//pollq_next
 		if( $poll_close === 1 || (int) $check_voted > 0 || ( is_array( $check_voted ) && count( $check_voted ) > 0 ) ) {
 			if($display) {
-				if ($poll_next != 0)
+				/*if ($poll_next != 0)
 				{
 					return get_poll($poll_next, false, $poll_id); // TODO:
-				}
+				}*/
 				return "<p>Vielen Dank für deine Stimme!</p>";
 				//echo "Test1"; //display_pollresult($poll_id, $check_voted);
 			} else {
-				if ($poll_next != 0)
+				/*if ($poll_next != 0)
 				{
 					return get_poll($poll_next, false, $poll_id);
-				}
+				}*/
 				return "<p>Vielen Dank für deine Stimme!</p>"; // display_pollresult($poll_id, $check_voted);
 			}
 		} elseif( $poll_close === 3 || ! check_allowtovote() ) {
@@ -213,7 +214,8 @@ function poll_scripts() {
 	}
 	wp_add_inline_style( 'wp-polls', $pollbar_css );
 	$poll_ajax_style = get_option('poll_ajax_style');
-	wp_enqueue_script('wp-polls', plugins_url('wp-polls/polls-js.js'), array('jquery'), WP_POLLS_VERSION, true);
+	//wp_enqueue_script('wp-polls', plugins_url('wp-polls/polls-js.js'), array('jquery'), WP_POLLS_VERSION, true);
+	wp_enqueue_script('wp-polls', plugins_url('wp-polls/polls-js.dev.js'), array('jquery'), WP_POLLS_VERSION, true);
 	wp_localize_script('wp-polls', 'pollsL10n', array(
 		'ajax_url' => admin_url('admin-ajax.php'),
 		'text_wait' => __('Your last request is still being processed. Please wait a while ...', 'wp-polls'),
@@ -436,7 +438,7 @@ function display_pollvote_test($poll_id, $display_loading = false, $prev_poll_id
 	// Temp Poll Result
 	$temp_pollvote = '';
 	// Get Poll Question Data
-	$poll_question = $wpdb->get_row( $wpdb->prepare( "SELECT pollq_id, pollq_question, pollq_totalvotes, pollq_timestamp, pollq_expiry, pollq_multiple, pollq_totalvoters, pollq_dependencies FROM $wpdb->pollsq WHERE pollq_id = %d LIMIT 1", $poll_id ) );
+	$poll_question = $wpdb->get_row( $wpdb->prepare( "SELECT pollq_id, pollq_question, pollq_totalvotes, pollq_timestamp, pollq_expiry, pollq_multiple, pollq_totalvoters, pollq_dependencies, pollq_next FROM $wpdb->pollsq WHERE pollq_id = %d LIMIT 1", $poll_id ) );
 
 	// Poll Question Variables
 	$poll_question_text = wp_kses_post( removeslashes( $poll_question->pollq_question ) );
@@ -524,6 +526,7 @@ function display_pollvote_test($poll_id, $display_loading = false, $prev_poll_id
 					'%POLL_ANSWER_PERCENTAGE%'          => $poll_answer_percentage,
 					'%POLL_MULTIPLE_ANSWER_PERCENTAGE%' => $poll_multiple_answer_percentage,
 					'%POLL_CHECKBOX_RADIO%'             => $poll_multiple_ans > 0 ? 'checkbox' : 'radio',
+					'%POLL_NEXT%'						=> $poll_question->pollq_next
 			);
 
 			$template_answer_variables = apply_filters( 'wp_polls_template_votebody_variables', $template_answer_variables );
@@ -717,23 +720,20 @@ function display_pollvote($poll_id, $display_loading = true, $prev_poll_id = 0) 
 function test()
 {
 	global $wpdb;
-	$poll_question = $wpdb->get_row( $wpdb->prepare( "SELECT pollq_id, pollq_question, pollq_totalvotes, pollq_timestamp, pollq_expiry, pollq_multiple, pollq_totalvoters, pollq_dependencies FROM $wpdb->pollsq WHERE pollq_id = %d LIMIT 1", 2 ) );
+	$answer_id = "6,9,12";
+	$answer_ids = array_map('intval', explode(",",removeslashes( $answer_id )));
 
-	$dependencies_str = $poll_question->pollq_dependencies;
-	$dependencies = array_map('intval', explode(", ",removeslashes( $dependencies_str )));
-	$dependencies[] = 2;
-	$prev_answers = [0];
-	foreach ($dependencies as $dependency_id)
+	// Now let's return the result to the Javascript function (The Callback)
+	$poll_answer = $wpdb->get_results($wpdb->prepare("SELECT polla_answers FROM $wpdb->pollsa WHERE polla_aid  IN ('"
+			. implode("','", $answer_ids)
+			. "')"));
+	//$other_polls_id = $wpdb->get_results($wpdb->prepare("SELECT polla_aid FROM $wpdb->pollsa WHERE polla_answers = %s AND polla_aid != %d", $poll_answer, $answer_id));
+	$ret = [];
+	foreach ($poll_answer as $poll_ids)
 	{
-		if ( check_voted_cookie($dependency_id) != 0) {
-			$prev_answers = array_merge($prev_answers, check_voted_cookie($dependency_id));
-		}
+		$ret[] = $poll_ids->polla_answers;
 	}
-	$condition = implode(', ', $prev_answers);
-	$a = $wpdb->prepare( "SELECT polla_aid, polla_qid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d AND polla_answers NOT IN (SELECT polla_answers FROM $wpdb->pollsa WHERE polla_aid IN (" . implode(',', $prev_answers) . "))", array( 2) );
-
-
-	return $condition;
+	return implode(', ', $ret);
 }
 
 ### Function: Display Results Form
@@ -1724,14 +1724,46 @@ function vote_poll_process($poll_id, $poll_aid_array = [])
 	}
 	do_action( 'wp_polls_vote_poll_success' );
 	$poll_next = $wpdb->get_var( $wpdb->prepare( "SELECT pollq_next FROM $wpdb->pollsq WHERE pollq_id = %d", $poll_id ) );
-	if ($poll_next != 0)
+	/*if ($poll_next != 0)
 	{
 		return get_poll($poll_next, false, $polla_aid);
-	}
+	}*/
 	return "<p>Vielen Dank für deine Stimme!</p>";
 	//return display_pollresult($poll_id, $poll_aid_array, false);
 }
 
+
+
+function get_answer_for_id() {
+
+	// The $_REQUEST contains all the data sent via AJAX from the Javascript call
+	global $wpdb;
+	if ( isset($_REQUEST) && isset( $_REQUEST['action'] ) && sanitize_key( $_REQUEST['action'] ) === 'get_answer_for_id' ) {
+
+		$answer_id = $_REQUEST['answer_id'];
+
+		$answer_ids = array_map('intval', explode(",",removeslashes( $answer_id )));
+
+		// Now let's return the result to the Javascript function (The Callback)
+		$poll_answer = $wpdb->get_results($wpdb->prepare("SELECT polla_answers FROM $wpdb->pollsa WHERE polla_aid  IN ('"
+				. implode("','", $answer_ids)
+				. "')"));
+		//$other_polls_id = $wpdb->get_results($wpdb->prepare("SELECT polla_aid FROM $wpdb->pollsa WHERE polla_answers = %s AND polla_aid != %d", $poll_answer, $answer_id));
+		$ret = [];
+		foreach ($poll_answer as $poll_ids)
+		{
+			$ret[] = $poll_ids->polla_answers;
+		}
+
+		echo implode(', ', $ret);
+	}
+
+	// Always die in functions echoing AJAX content
+	die();
+}
+
+// This bit is a special action hook that works with the WordPress AJAX functionality.
+add_action( 'wp_ajax_get_answer_for_id', 'get_answer_for_id' );
 
 ### Function: Vote Poll
 add_action('wp_ajax_polls', 'vote_poll');

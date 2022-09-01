@@ -2,6 +2,51 @@
 pollsL10n.show_loading = parseInt(pollsL10n.show_loading);
 pollsL10n.show_fading = parseInt(pollsL10n.show_fading);
 
+function vote_for_all_on_page()
+{
+	var all_polls = document.getElementsByClassName("wp-polls")
+	var poll_ids = []
+	var answer_list = []
+	for (let i = 0; i < all_polls.length; i++)
+	{
+		poll_ids.push(all_polls[i].id.replace("polls-", ""))
+	}
+	for(let i = 0; i < poll_ids.length; i++)
+	{
+		var poll_id = poll_ids[i];
+		var str = "poll_" + poll_id
+		var selector = "input[name="+str+"]"
+		var check_boxes = document.querySelectorAll(selector)
+		for (const element of check_boxes)
+		{
+			if (element.checked)
+			{
+				answer_list.push(element.id.replace("poll-answer-", ""));
+			}
+		}
+
+	}
+	if(answer_list.length === 3)
+	{
+		alert(String(answer_list))
+		get_answer_from_id(String(answer_list));
+		//poll_ids.forEach(element => poll_vote(element))
+	}
+}
+
+function onlyUnique(array) {
+	while(array.length > 0)
+	{
+		var a = array.pop()
+		if (array.indexOf(a) !== -1)
+		{
+			return false;
+		}
+	}
+	return true;
+
+}
+
 // When User Vote For Poll
 function poll_vote(current_poll_id) {
 	jQuery(document).ready(function($) {
@@ -41,7 +86,35 @@ function poll_vote(current_poll_id) {
 }
 
 function test_hide(current_poll_id) {
-	jQuery(document).ready(function($) {
+	//var x = document.getElementById("polls-" + next_poll_id);
+	//x.style.display = "block";
+
+	var all_polls = document.getElementsByClassName("wp-polls")
+	var poll_ids = []
+	var answer_list = []
+	for (let i = 0; i < all_polls.length; i++)
+	{
+		poll_ids.push(all_polls[i].id.replace("polls-", ""))
+	}
+	for(let i = 0; i < poll_ids.length; i++)
+	{
+		var poll_id = poll_ids[i];
+		var str = "poll_" + poll_id
+		var selector = "input[name="+str+"]"
+		var check_boxes = document.querySelectorAll(selector)
+		for (const element of check_boxes)
+		{
+			if (element.checked)
+			{
+				answer_list.push(element.id.replace("poll-answer-", ""));
+			}
+		}
+
+	}
+	//alert(String(answer_list))
+	//get_answer_from_id(String(answer_list))
+
+	/*jQuery(document).ready(function($) {
 		poll_answer_id = '';
 		poll_multiple_ans = 0;
 		poll_multiple_ans_count = 0;
@@ -58,22 +131,63 @@ function test_hide(current_poll_id) {
 				}
 			}
 		});
-		if(poll_multiple_ans > 0) {
-			if(poll_multiple_ans_count > 0 && poll_multiple_ans_count <= poll_multiple_ans) {
-				poll_answer_id = poll_answer_id.substring(0, (poll_answer_id.length-1));
-				poll_process(current_poll_id, poll_answer_id);
-			} else if(poll_multiple_ans_count == 0) {
-				alert(pollsL10n.text_valid);
-			} else {
-				alert(pollsL10n.text_multiple + ' ' + poll_multiple_ans);
-			}
+		if(poll_answer_id > 0) {
+			alert(poll_answer_id);
+			get_answer_from_id(poll_answer_id);
 		} else {
-			if(poll_answer_id > 0) {
-				poll_process(current_poll_id, poll_answer_id);
-			} else {
-				alert(pollsL10n.text_valid);
-			}
+			alert(pollsL10n.text_valid);
 		}
+	});*/
+}
+
+function hide_answer_div(ids)
+{
+	var elementIds = []
+	ids.forEach(function(id){
+		var x = document.getElementById("poll-answer-div-" + id);
+		if (x != null){
+			elementIds.push(x.id);
+			x.style.display = "none";}
+	});
+	var answer_divs = document.getElementsByClassName("poll-answer-div")
+	for (let i = 0; i < answer_divs.length; i++)
+	{
+		var div = answer_divs[i]
+		if (!elementIds.includes(div.id))
+		{
+			div.style.display = "block"
+		}
+	}
+
+}
+
+function get_answer_from_id(answer_id)
+{
+	jQuery(document).ready(function($) {
+
+		// This is the variable we are passing via AJAX
+		var fruit = 'Banana';
+
+		// This does the ajax request (The Call).
+		$.ajax({
+			url: pollsL10n.ajax_url, // Since WP 2.8 ajaxurl is always defined and points to admin-ajax.php
+			data: {
+				'action':'get_answer_for_id', // This is our PHP function below
+				'answer_id' : answer_id // This is the variable we are sending via AJAX
+			},
+			success:function(data) {
+				// This outputs the result of the ajax request (The Callback)
+				window.alert(data);
+				if(onlyUnique(data.split(', '))) {
+					data.split(', ').forEach(element => poll_vote(element))
+				}
+				//hide_answer_div(data.split(', '));
+			},
+			error: function(errorThrown){
+				window.alert(errorThrown);
+			}
+		});
+
 	});
 }
 

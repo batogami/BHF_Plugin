@@ -24,7 +24,7 @@ $base_page = 'admin.php?page='.$base_name;
 		<tbody>
 		<tr>
 			<th width="20%" scope="row" valign="top"></th>
-			<td width="80%"><?php echo  display_pollvote_test(2); echo  display_pollvote_test(3); ?></td>
+			<td width="80%"><?php echo test();?></td>
 		</tr>
 	</table>
 	</div>
