@@ -162,15 +162,15 @@ function get_poll($temp_poll_id = 0, $display = true, $prev_poll_id = 0) {
 		} elseif( $poll_close === 3 || ! check_allowtovote() ) {
 			$disable_poll_js = '<script type="text/javascript">jQuery("#polls_form_'.$poll_id.' :input").each(function (i){jQuery(this).attr("disabled","disabled")});</script>';
 			if($display) {
-				echo display_pollvote($poll_id, true,$prev_poll_id).$disable_poll_js;
+				echo display_pollvote_test($poll_id, true,$prev_poll_id).$disable_poll_js;
 			} else {
-				return display_pollvote($poll_id, true, $prev_poll_id).$disable_poll_js;
+				return display_pollvote_test($poll_id, true, $prev_poll_id).$disable_poll_js;
 			}
 		} elseif( $poll_active === 1 ) {
 			if($display) {
-				echo display_pollvote($poll_id, true, $prev_poll_id);
+				echo display_pollvote_test($poll_id, true, $prev_poll_id);
 			} else {
-				return display_pollvote($poll_id, true, $prev_poll_id);
+				return display_pollvote_test($poll_id, true, $prev_poll_id);
 			}
 		}
 	}
@@ -720,7 +720,7 @@ function display_pollvote($poll_id, $display_loading = true, $prev_poll_id = 0) 
 function test()
 {
 	global $wpdb;
-	$answer_id = "6,9,12";
+	$answer_id = "6,9,13";
 	$answer_ids = array_map('intval', explode(",",removeslashes( $answer_id )));
 
 	// Now let's return the result to the Javascript function (The Callback)
@@ -974,6 +974,28 @@ function poll_page_shortcode($atts) {
 	return polls_archive($attributes['type']);
 }
 
+### Function: Short Code For Inserting Polls Into Posts
+add_shortcode( 'test', 'test_shortcode' );
+function test_shortcode( $atts ) {
+
+	// Voting Form Footer Variables
+	$template_footer = removeslashes(get_option('poll_template_votefooter'));
+
+	$template_footer_variables = array(
+			'%POLL_ID%'               => 1,
+			'%POLL_RESULT_URL%'       => "http",
+			'%POLL_START_DATE%'       => 0,
+			'%POLL_END_DATE%'         => 0,
+			'%POLL_MULTIPLE_ANS_MAX%' =>  1
+	);
+
+	$template_footer_variables = apply_filters( 'wp_polls_template_votefooter_variables', $template_footer_variables );
+	$template_footer           = apply_filters( 'wp_polls_template_votefooter_markup', $template_footer, "poll_question", $template_footer_variables );
+
+	// Print Out Voting Form Footer Template
+	$temp_pollvote = "\t\t$template_footer\n";
+	return $temp_pollvote;
+}
 
 ### Function: Short Code For Inserting Polls Into Posts
 add_shortcode( 'poll', 'poll_shortcode' );
