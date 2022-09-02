@@ -720,7 +720,7 @@ function display_pollvote($poll_id, $display_loading = true, $prev_poll_id = 0) 
 function test()
 {
 	global $wpdb;
-	$answer_id = "6,9,13";
+	$answer_id = "6";
 	$answer_ids = array_map('intval', explode(",",removeslashes( $answer_id )));
 
 	// Now let's return the result to the Javascript function (The Callback)
@@ -1786,6 +1786,7 @@ function get_ids_with_same_answer() {
 	die();
 }
 add_action( 'wp_ajax_get_ids_with_same_answer', 'get_ids_with_same_answer' );
+add_action('wp_ajax_nopriv_get_ids_with_same_answer', 'get_ids_with_same_answer');
 
 function get_answer_for_id() {
 
@@ -1817,6 +1818,7 @@ function get_answer_for_id() {
 
 // This bit is a special action hook that works with the WordPress AJAX functionality.
 add_action( 'wp_ajax_get_answer_for_id', 'get_answer_for_id' );
+add_action('wp_ajax_nopriv_get_answer_for_id', 'get_answer_for_id');
 
 ### Function: Vote Poll
 add_action('wp_ajax_polls', 'vote_poll');

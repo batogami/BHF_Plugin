@@ -119,6 +119,8 @@ function hide_ajax(answer_list)
 
 		// This does the ajax request (The Call).
 		$.ajax({
+			type: 'POST',
+			xhrFields: {withCredentials: true},
 			url: pollsL10n.ajax_url, // Since WP 2.8 ajaxurl is always defined and points to admin-ajax.php
 			data: {
 				'action':'get_ids_with_same_answer', // This is our PHP function below
@@ -166,6 +168,8 @@ function vote_for_all_ajax(answer_id)
 
 		// This does the ajax request (The Call).
 		$.ajax({
+			type: 'POST',
+			xhrFields: {withCredentials: true},
 			url: pollsL10n.ajax_url, // Since WP 2.8 ajaxurl is always defined and points to admin-ajax.php
 			data: {
 				'action':'get_answer_for_id', // This is our PHP function below
