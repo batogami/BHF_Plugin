@@ -724,14 +724,15 @@ function test()
 	$answer_ids = array_map('intval', explode(",",removeslashes( $answer_id )));
 
 	// Now let's return the result to the Javascript function (The Callback)
-	$poll_answer = $wpdb->get_results($wpdb->prepare("SELECT polla_answers FROM $wpdb->pollsa WHERE polla_aid  IN ('"
+	$other_polls_id = $wpdb->get_results($wpdb->prepare("SELECT polla_aid FROM $wpdb->pollsa WHERE polla_answers IN (SELECT polla_answers FROM $wpdb->pollsa WHERE polla_aid  IN ('"
+			. implode("','", $answer_ids)
+			. "')) AND polla_aid NOT IN ('"
 			. implode("','", $answer_ids)
 			. "')"));
-	//$other_polls_id = $wpdb->get_results($wpdb->prepare("SELECT polla_aid FROM $wpdb->pollsa WHERE polla_answers = %s AND polla_aid != %d", $poll_answer, $answer_id));
 	$ret = [];
-	foreach ($poll_answer as $poll_ids)
+	foreach ($other_polls_id as $poll_ids)
 	{
-		$ret[] = $poll_ids->polla_answers;
+		$ret[] = $poll_ids->polla_aid;
 	}
 	return implode(', ', $ret);
 }
@@ -975,8 +976,8 @@ function poll_page_shortcode($atts) {
 }
 
 ### Function: Short Code For Inserting Polls Into Posts
-add_shortcode( 'test', 'test_shortcode' );
-function test_shortcode( $atts ) {
+add_shortcode( 'vote_btn', 'vote_btn_shortcode' );
+function vote_btn_shortcode( $atts ) {
 
 	// Voting Form Footer Variables
 	$template_footer = removeslashes(get_option('poll_template_votefooter'));
@@ -1754,7 +1755,37 @@ function vote_poll_process($poll_id, $poll_aid_array = [])
 	//return display_pollresult($poll_id, $poll_aid_array, false);
 }
 
+function get_ids_with_same_answer() {
 
+	// The $_REQUEST contains all the data sent via AJAX from the Javascript call
+	global $wpdb;
+
+	if ( isset($_REQUEST) && isset( $_REQUEST['action'] ) && sanitize_key( $_REQUEST['action'] ) === 'get_ids_with_same_answer' ) {
+
+		$answer_ids_str = $_REQUEST['answer_ids'];
+
+		$answer_ids = array_map('intval', explode(",",removeslashes( $answer_ids_str )));
+
+		// Now let's return the result to the Javascript function (The Callback)
+		$other_polls_id = $wpdb->get_results($wpdb->prepare("SELECT polla_aid FROM $wpdb->pollsa WHERE polla_answers IN (SELECT polla_answers FROM $wpdb->pollsa WHERE polla_aid  IN ('"
+				. implode("','", $answer_ids)
+				. "')) AND polla_aid NOT IN ('"
+				. implode("','", $answer_ids)
+				. "')"));
+		$ret = [];
+
+		foreach ($other_polls_id as $poll_ids)
+		{
+			$ret[] = $poll_ids->polla_aid;
+		}
+
+		echo implode(', ', $ret);
+	}
+
+	// Always die in functions echoing AJAX content
+	die();
+}
+add_action( 'wp_ajax_get_ids_with_same_answer', 'get_ids_with_same_answer' );
 
 function get_answer_for_id() {
 
