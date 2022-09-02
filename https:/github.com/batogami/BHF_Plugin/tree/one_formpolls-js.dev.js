@@ -29,7 +29,7 @@ function vote_for_all_on_page()
 	if(answer_list.length === 3)
 	{
 		alert(String(answer_list))
-		get_answer_from_id(String(answer_list));
+		vote_for_all_ajax(String(answer_list));
 		//poll_ids.forEach(element => poll_vote(element))
 	}
 }
@@ -86,9 +86,6 @@ function poll_vote(current_poll_id) {
 }
 
 function test_hide(current_poll_id) {
-	//var x = document.getElementById("polls-" + next_poll_id);
-	//x.style.display = "block";
-
 	var all_polls = document.getElementsByClassName("wp-polls")
 	var poll_ids = []
 	var answer_list = []
@@ -111,7 +108,32 @@ function test_hide(current_poll_id) {
 		}
 
 	}
+	hide_ajax(answer_list);
 
+}
+
+function hide_ajax(answer_list)
+{
+	jQuery(document).ready(function($) {
+
+
+		// This does the ajax request (The Call).
+		$.ajax({
+			url: pollsL10n.ajax_url, // Since WP 2.8 ajaxurl is always defined and points to admin-ajax.php
+			data: {
+				'action':'get_ids_with_same_answer', // This is our PHP function below
+				'answer_ids' : answer_ids // This is the variable we are sending via AJAX
+			},
+			success:function(data) {
+				// This outputs the result of the ajax request (The Callback)
+				hide_answer_div(data.split(', '));
+			},
+			error: function(errorThrown){
+				window.alert(errorThrown);
+			}
+		});
+
+	});
 }
 
 function hide_answer_div(ids)
@@ -135,7 +157,7 @@ function hide_answer_div(ids)
 
 }
 
-function get_answer_from_id(answer_id)
+function vote_for_all_ajax(answer_id)
 {
 	jQuery(document).ready(function($) {
 
