@@ -790,6 +790,31 @@ function display_pollresult( $poll_id, $user_voted = array(), $display_loading =
 	return apply_filters( 'wp_polls_result_markup', $temp_pollresult );
 }
 
+function get_the_user_ip() {
+
+	if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
+
+//check ip from share internet
+
+		$ip = $_SERVER['HTTP_CLIENT_IP'];
+
+	} elseif ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+
+//to check ip is pass from proxy
+
+		$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+
+	} else {
+
+		$ip = $_SERVER['REMOTE_ADDR'];
+
+	}
+
+	return apply_filters( 'wpb_get_ip', $ip );
+
+}
+
+add_shortcode('display_ip', 'get_the_user_ip');
 
 ### Function: Get IP Address
 if ( ! function_exists( 'get_ipaddress' ) ) {
