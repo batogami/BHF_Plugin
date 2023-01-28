@@ -27,7 +27,7 @@ Text Domain: wp-polls
 */
 
 ### Version
-define( 'WP_POLLS_VERSION', '2.76.75' );
+define( 'WP_POLLS_VERSION', '2.76.76' );
 
 
 ### Create Text Domain For Translations

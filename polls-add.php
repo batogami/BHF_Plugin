@@ -95,44 +95,28 @@ if ( ! empty($_POST['do'] ) ) {
 				$polla_answers = isset( $_POST['polla_answers'] ) ? $_POST['polla_answers'] : array();
 				$polla_qid = (int) $wpdb->insert_id;
 				foreach ( $polla_answers as $polla_answer ) {
+					$index = array_search($polla_answer, $polla_answers);
+					$polla_ips =  $_POST['polla_ips'];
+					$polla_ip = $polla_ips[$index];
 					$polla_answer = wp_kses_post( trim( $polla_answer ) );
 					if ( ! empty( $polla_answer ) ) {
 						$add_poll_answers = $wpdb->insert(
 							$wpdb->pollsa,
 							array(
-								'polla_qid'	  => $polla_qid,
-								'polla_answers'  => $polla_answer,
-								'polla_votes'	=> 0
+								'polla_qid'	  	=> $polla_qid,
+								'polla_answers' => $polla_answer,
+								'polla_votes'	=> 0,
+								'polla_ip'  	=> $polla_ip
 							),
 							array(
 								'%d',
 								'%s',
-								'%d'
+								'%d',
+								'%s'
 							)
 						);
 						if ( ! $add_poll_answers ) {
 							$text .= '<p style="color: red;">' . sprintf(__('Error In Adding Poll\'s Answer \'%s\'.', 'wp-polls'), $polla_answer) . '</p>';
-						}
-					} else {
-						$text .= '<p style="color: red;">' . __( 'Poll\'s Answer is empty.', 'wp-polls' ) . '</p>';
-					}
-				}
-				$polla_ips = isset( $_POST['polla_ips'] ) ? $_POST['polla_ips'] : array();
-				foreach ( $polla_ips as $polla_ip ) {
-					if ( ! empty( $polla_ip ) ) {
-						$add_poll_answers = $wpdb->update(
-								$wpdb->pollsa,
-								array(
-										'polla_qid'	  => $polla_qid,
-										'polla_ip'  => $polla_ip,
-								),
-								array(
-										'%d',
-										'%d'
-								)
-						);
-						if ( ! $add_poll_answers ) {
-							$text .= '<p style="color: red;">' . sprintf(__('Error In Adding Poll\'s Answer \'%s\'.', 'wp-polls'), $polla_ip) . '</p>';
 						}
 					} else {
 						$text .= '<p style="color: red;">' . __( 'Poll\'s Answer is empty.', 'wp-polls' ) . '</p>';
