@@ -1,5 +1,5 @@
 {
-    "name": "lesterchan/wp-polls",
+    "name": "Batogami/special-polls",
     "description": "Adds an AJAX poll system to your WordPress blog.",
     "type": "wordpress-plugin",
     "keywords": ["wordpress", "plugin", "poll"],
@@ -7,8 +7,8 @@
     "minimum-stability": "dev",
     "authors": [
         {
-            "name": "Lester Chan",
-            "email": "lesterchan@gmail.com"
+            "name": "Maximilian Bartes",
+            "email": "max.002@web.de"
         }
     ]
 }

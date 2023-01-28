@@ -9,7 +9,7 @@ Text Domain: wp-polls
 
 
 /*
-	Copyright 2022  Lester Chan  (email : lesterchan@gmail.com)
+	Copyright 2023  Maximilian Bartels  (email : max.002@web.de)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ Text Domain: wp-polls
 */
 
 ### Version
-define( 'WP_POLLS_VERSION', '2.76.1' );
+define( 'WP_POLLS_VERSION', '2.76.75' );
 
 
 ### Create Text Domain For Translations
@@ -378,7 +378,7 @@ function check_voted_cookie( $poll_id ) {
 }
 
 
-### Function: Check Voted By IP
+### Function: Check Voted By IP # TODO function anpassen, dass 20 mal mit der gleichen IP gevotet werden kann
 function check_voted_ip( $poll_id ) {
 	global $wpdb;
 	$log_expiry = (int) get_option( 'poll_cookielog_expiry' );
@@ -2224,6 +2224,7 @@ function polls_activate() {
 							  "polla_qid int(10) NOT NULL default '0'," .
 							  "polla_answers varchar(200) character set utf8 NOT NULL default ''," .
 							  "polla_votes int(10) NOT NULL default '0'," .
+						      "polla_ip varchar(100) NOT NULL default ''," .
 							  "PRIMARY KEY  (polla_aid)" .
 							  ") $charset_collate;";
 	$create_table['pollsip'] = "CREATE TABLE $wpdb->pollsip (" .

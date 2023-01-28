@@ -122,12 +122,14 @@ if(!empty($_POST['do'])) {
                 }
                 foreach($polla_aids as $polla_aid) {
                     $polla_answers = wp_kses_post( trim( $_POST['polla_aid-'.$polla_aid] ) );
+					$polla_ip = wp_kses_post( trim( $_POST['polla_ip-'.$polla_aid] ) );
                     $polla_votes = (int) sanitize_key($_POST['polla_votes-'.$polla_aid]);
                     $edit_poll_answer = $wpdb->update(
                         $wpdb->pollsa,
                         array(
                             'polla_answers' => $polla_answers,
-                            'polla_votes'   => $polla_votes
+                            'polla_votes'   => $polla_votes,
+							'polla_ip'   => $polla_ip
                         ),
                         array(
                             'polla_qid' => $pollq_id,
@@ -135,7 +137,8 @@ if(!empty($_POST['do'])) {
                         ),
                         array(
                             '%s',
-                            '%d'
+                            '%d',
+							'%s'
                         ),
                         array(
                             '%d',
@@ -156,21 +159,26 @@ if(!empty($_POST['do'])) {
             if(!empty($polla_answers_new)) {
                 $i = 0;
                 $polla_answers_new_votes = $_POST['polla_answers_new_votes'];
+				$polla_ips =  $_POST['polla_ips'];
                 foreach($polla_answers_new as $polla_answer_new) {
+					$index = array_search($polla_answer_new, $polla_answers_new);
+					$polla_ip = $polla_ips[$index];
                     $polla_answer_new = wp_kses_post( trim( $polla_answer_new ) );
                     if(!empty($polla_answer_new)) {
                         $polla_answer_new_vote = (int) sanitize_key( $polla_answers_new_votes[$i] );
                         $add_poll_answers = $wpdb->insert(
                             $wpdb->pollsa,
                             array(
-                                'polla_qid'      => $pollq_id,
-                                'polla_answers'  => $polla_answer_new,
-                                'polla_votes'    => $polla_answer_new_vote
+                                'polla_qid'      	=> $pollq_id,
+                                'polla_answers'  	=> $polla_answer_new,
+                                'polla_votes'    	=> $polla_answer_new_vote,
+								'polla_ip'  		=> $polla_ip
                             ),
                             array(
                                 '%d',
                                 '%s',
-                                '%d'
+                                '%d',
+								'%s',
                             )
                         );
                         if( ! $add_poll_answers ) {
@@ -204,7 +212,7 @@ switch($mode) {
     case 'edit':
         $last_col_align = is_rtl() ? 'right' : 'left';
         $poll_question = $wpdb->get_row( $wpdb->prepare( "SELECT pollq_question, pollq_timestamp, pollq_totalvotes, pollq_active, pollq_expiry, pollq_multiple, pollq_totalvoters, pollq_dependencies, pollq_vote_factor, pollq_next FROM $wpdb->pollsq WHERE pollq_id = %d", $poll_id ) );
-        $poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_answers, polla_votes FROM $wpdb->pollsa WHERE polla_qid = %d ORDER BY polla_aid ASC", $poll_id ) );
+        $poll_answers = $wpdb->get_results( $wpdb->prepare( "SELECT polla_aid, polla_answers, polla_votes, polla_ip FROM $wpdb->pollsa WHERE polla_qid = %d ORDER BY polla_aid ASC", $poll_id ) );
         $poll_noquestion = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(polla_aid) FROM $wpdb->pollsa WHERE polla_qid = %d", $poll_id ) );
         $poll_question_text = removeslashes($poll_question->pollq_question);
         $poll_totalvotes = (int) $poll_question->pollq_totalvotes;
@@ -242,6 +250,7 @@ switch($mode) {
                     <tr>
                         <th width="20%" scope="row" valign="top"><?php _e('Answer No.', 'wp-polls') ?></th>
                         <th width="60%" scope="row" valign="top"><?php _e('Answer Text', 'wp-polls') ?></th>
+						<th width="20%" scope="row" valign="top" style="text-align: <?php echo $last_col_align; ?>;"><?php _e('Country IP', 'wp-polls') ?></th>
                         <th width="20%" scope="row" valign="top" style="text-align: <?php echo $last_col_align; ?>;"><?php _e('No. Of Votes', 'wp-polls') ?></th>
                     </tr>
                 </thead>
@@ -255,13 +264,15 @@ switch($mode) {
                             foreach($poll_answers as $poll_answer) {
                                 $polla_aid = (int) $poll_answer->polla_aid;
                                 $polla_answers = removeslashes($poll_answer->polla_answers);
+								$polla_ip = removeslashes($poll_answer->polla_ip);
                                 $polla_votes = (int) $poll_answer->polla_votes;
                                 $pollip_answers[$polla_aid] = $polla_answers;
                                 echo "<tr id=\"poll-answer-$polla_aid\">\n";
                                 echo '<th width="20%" scope="row" valign="top">'.sprintf(__('Answer %s', 'wp-polls'), number_format_i18n($i)).'</th>'."\n";
                                 echo "<td width=\"60%\"><input type=\"text\" size=\"50\" maxlength=\"200\" name=\"polla_aid-$polla_aid\" value=\"". esc_attr( $polla_answers ) . "\" />&nbsp;&nbsp;&nbsp;";
                                 echo "<input type=\"button\" value=\"".__('Delete', 'wp-polls')."\" onclick=\"delete_poll_ans($poll_id, $polla_aid, $polla_votes, '".sprintf(esc_js(__('You are about to delete this poll\'s answer \'%s\'.', 'wp-polls')), esc_js( esc_attr( $polla_answers ) ) ) . "', '".wp_create_nonce('wp-polls_delete-poll-answer')."');\" class=\"button\" /></td>\n";
-                                echo '<td width="20%" align="'.$last_col_align.'">'.number_format_i18n($polla_votes)." <input type=\"text\" size=\"4\" id=\"polla_votes-$polla_aid\" name=\"polla_votes-$polla_aid\" value=\"$polla_votes\" onblur=\"check_totalvotes();\" /></td>\n</tr>\n";
+								echo "<td width=\"20%\"><input type=\"text\" name=\"polla_ip-$polla_aid\" value=\"". esc_attr( $polla_ip ) . "\" />&nbsp;&nbsp;&nbsp;";
+								echo '<td width="20%" align="'.$last_col_align.'">'.number_format_i18n($polla_votes)." <input type=\"text\" size=\"4\" id=\"polla_votes-$polla_aid\" name=\"polla_votes-$polla_aid\" value=\"$polla_votes\" onblur=\"check_totalvotes();\" /></td>\n</tr>\n";
                                 $poll_actual_totalvotes += $polla_votes;
                                 $i++;
                             }
@@ -272,11 +283,13 @@ switch($mode) {
                     <tr>
                         <td width="20%">&nbsp;</td>
                         <td width="60%"><input type="button" value="<?php _e('Add Answer', 'wp-polls') ?>" onclick="add_poll_answer_edit();" class="button" /></td>
-                        <td width="20%" align="<?php echo $last_col_align; ?>"><strong><?php _e('Total Votes:', 'wp-polls'); ?></strong> <strong id="poll_total_votes"><?php echo number_format_i18n($poll_actual_totalvotes); ?></strong> <input type="text" size="4" readonly="readonly" id="pollq_totalvotes" name="pollq_totalvotes" value="<?php echo $poll_actual_totalvotes; ?>" onblur="check_totalvotes();" /></td>
+						<td width="20%">&nbsp;</td>
+						<td width="20%" align="<?php echo $last_col_align; ?>"><strong><?php _e('Total Votes:', 'wp-polls'); ?></strong> <strong id="poll_total_votes"><?php echo number_format_i18n($poll_actual_totalvotes); ?></strong> <input type="text" size="4" readonly="readonly" id="pollq_totalvotes" name="pollq_totalvotes" value="<?php echo $poll_actual_totalvotes; ?>" onblur="check_totalvotes();" /></td>
                     </tr>
                     <tr>
                         <td width="20%">&nbsp;</td>
                         <td width="60%">&nbsp;</td>
+						<td width="20%">&nbsp;</td>
                         <td width="20%" align="<?php echo $last_col_align; ?>"><strong><?php _e('Total Voters:', 'wp-polls'); ?> <?php echo number_format_i18n($poll_totalvoters); ?></strong> <input type="text" size="4" name="pollq_totalvoters" value="<?php echo $poll_totalvoters; ?>" /></td>
                     </tr>
 					<tr>

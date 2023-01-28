@@ -117,6 +117,27 @@ if ( ! empty($_POST['do'] ) ) {
 						$text .= '<p style="color: red;">' . __( 'Poll\'s Answer is empty.', 'wp-polls' ) . '</p>';
 					}
 				}
+				$polla_ips = isset( $_POST['polla_ips'] ) ? $_POST['polla_ips'] : array();
+				foreach ( $polla_ips as $polla_ip ) {
+					if ( ! empty( $polla_ip ) ) {
+						$add_poll_answers = $wpdb->update(
+								$wpdb->pollsa,
+								array(
+										'polla_qid'	  => $polla_qid,
+										'polla_ip'  => $polla_ip,
+								),
+								array(
+										'%d',
+										'%d'
+								)
+						);
+						if ( ! $add_poll_answers ) {
+							$text .= '<p style="color: red;">' . sprintf(__('Error In Adding Poll\'s Answer \'%s\'.', 'wp-polls'), $polla_ip) . '</p>';
+						}
+					} else {
+						$text .= '<p style="color: red;">' . __( 'Poll\'s Answer is empty.', 'wp-polls' ) . '</p>';
+					}
+				}
 				// Update Lastest Poll ID To Poll Options
 				$latest_pollid = polls_latest_id();
 				$update_latestpoll = update_option( 'poll_latestpoll', $latest_pollid );
@@ -169,7 +190,7 @@ $count = 0;
 			for($i = 1; $i <= $poll_noquestion; $i++) {
 				echo "<tr id=\"poll-answer-$i\">\n";
 				echo "<th width=\"20%\" scope=\"row\" valign=\"top\">".sprintf(__('Answer %s', 'wp-polls'), number_format_i18n($i))."</th>\n";
-				echo "<td width=\"80%\"><input type=\"text\" size=\"50\" maxlength=\"200\" name=\"polla_answers[]\" />&nbsp;&nbsp;&nbsp;<input type=\"button\" value=\"".__('Remove', 'wp-polls')."\" onclick=\"remove_poll_answer_add(".$i.");\" class=\"button\" /></td>\n";
+				echo "<td width=\"60%\"><input type=\"text\" size=\"50\" maxlength=\"200\" name=\"polla_answers[]\" />&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"polla_ips[]\"  /><input type=\"button\" value=\"".__('Remove', 'wp-polls')."\" onclick=\"remove_poll_answer_add(".$i.");\" class=\"button\" /></td>\n";
 				echo "</tr>\n";
 				$count++;
 			}
