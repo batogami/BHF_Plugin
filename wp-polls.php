@@ -378,7 +378,7 @@ function check_voted_cookie( $poll_id ) {
 }
 
 
-### Function: Check Voted By IP # TODO function anpassen, dass 20 mal mit der gleichen IP gevotet werden kann
+### Function: Check Voted By IP
 function check_voted_ip( $poll_id ) {
 	global $wpdb;
 	$log_expiry = (int) get_option( 'poll_cookielog_expiry' );
@@ -388,7 +388,7 @@ function check_voted_ip( $poll_id ) {
 	}
 	// Check IP From IP Logging Database
 	$get_voted_aids = $wpdb->get_col( $wpdb->prepare( "SELECT pollip_aid FROM $wpdb->pollsip WHERE pollip_qid = %d AND (pollip_ip = %s OR pollip_ip = %s)", $poll_id, poll_get_ipaddress(), get_ipaddress() ) . $log_expiry_sql );
-	if( $get_voted_aids ) {
+	if( count($get_voted_aids) > 20 ) {
 		return $get_voted_aids;
 	}
 
