@@ -1696,6 +1696,12 @@ function vote_poll_process($poll_id, $poll_aid_array = [])
 	$pollip_timestamp = current_time('timestamp');
 	$poll_logging_method = (int) get_option('poll_logging_method');
 
+	$polla_ip = $wpdb->get_var( $wpdb->prepare( "SELECT polla_ip FROM $wpdb->polla WHERE polla_id = %d", $poll_id ) );
+
+	$long = ip2long(get_ipaddress());
+	get_country_from_ip();
+
+
 	// Only Create Cookie If User Choose Logging Method 1 Or 3
 	if ( $poll_logging_method === 1 || $poll_logging_method === 3 ) {
 		$cookie_expiry = (int) get_option('poll_cookielog_expiry');
@@ -1753,6 +1759,14 @@ function vote_poll_process($poll_id, $poll_aid_array = [])
 	}*/
 	return "<p>Vielen Dank für deine Stimme!</p>";
 	//return display_pollresult($poll_id, $poll_aid_array, false);
+}
+
+function get_country_from_ip($ip_number)
+{
+	//TODO write get_country_from_ip function
+	global $wpdb;
+	$country_code = $wpdb->get_var( $wpdb->prepare( "SELECT country_code FROM $wpdb->ip_to_country WHERE ip_to >= %d AND ip_from <= %d", $ip_number ) );
+	return $country_code;
 }
 
 function get_ids_with_same_answer() {
